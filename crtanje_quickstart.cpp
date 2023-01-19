@@ -22,15 +22,24 @@
 #include<minmax.h>
 
 
-
 using namespace std;
 void display(void);
 void reshape(int, int);
 void idle();
 void readSensors(unsigned char, int, int);
-int zvuk = 0;
-void e_button(unsigned char key, int x, int y);
-void delay(int milliseconds);
+void display_sensors_new(unsigned char key, int x, int y);
+void play_left();
+void play_right();
+
+
+int lsf;
+int rsf;
+int rsr;
+int lsr;
+
+int gear = 1;
+
+int polje[4] = { 0, 0, 0, 0 };
 
 unsigned char* loadPPM(const char* filename, int& width, int& height) {
 	const int BUFSIZE = 128;
@@ -59,9 +68,11 @@ unsigned char* loadPPM(const char* filename, int& width, int& height) {
 	{
 		retval_fgets = fgets(buf[0], BUFSIZE, fp);
 	} while (buf[0][0] == '#');
+
 	rawData = new unsigned char[width * height * 3];
 	read = fread(rawData, width * height * 3, 1, fp);
 	fclose(fp);
+
 	if (read != 1)
 	{
 		std::cerr << "error parsing ppm file, incomplete data" << std::endl;
@@ -96,7 +107,7 @@ void loadTexture()
 						  // loading image data from specific file:
 	tdata = loadPPM("..\\auto3.ppm", twidth, theight);
 	if (tdata == NULL) return; // check if image data is loaded
-							   // generating a texture to show the image
+							   //generating a texture to show the image
 	glGenTextures(1, &texture[0]);
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, twidth, theight, 0, GL_RGB, GL_UNSIGNED_BYTE,
@@ -123,7 +134,7 @@ int main(int argc, char** argv) {
 	// function called when new window need to be drawn
 	glutDisplayFunc(display);
 
-	glutKeyboardFunc(e_button);
+	glutKeyboardFunc(display_sensors_new);
 	// function called when window changes the size
 	glutReshapeFunc(reshape);
 	// function called when nothing else is executing and CPU is free
@@ -132,60 +143,38 @@ int main(int argc, char** argv) {
 	initGL();
 	/* 3) START GLUT PROCESSING CYCLE */
 	glutMainLoop();
+
 	return 0;
 }
 
-
-void display() {
-	cerr << "display callback" << endl;
-	// clean color buffers
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// start drawing quads
+void LF1() {
 	glBegin(GL_QUADS);
-	// choose color (white)
-	glColor3f(1, 1, 1);
-	// coordinates of initial white rectangle for the background
-	glTexCoord2f(0, 1); glVertex3f(-2, -1, 0);
-	glTexCoord2f(1, 1); glVertex3f(2, -1, 0);
-	glTexCoord2f(1, 0); glVertex3f(2, 1, 0);
-	glTexCoord2f(0, 0); glVertex3f(-2, 1, 0);
-
-
-	// drawing a rectangle
-	/*glColor3f(1.0, 0.0, 0.0); //choosing red color
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(-1.15f, -0.70f, 0.0f);
+	glVertex3f(-1.1f, -0.65f, 0.0f);
+	glVertex3f(-1.4f, -0.2f, 0.0f);
+	glVertex3f(-1.45f, -0.25f, 0.0f);
+	glEnd();
+}
+void LF2() {
 	glBegin(GL_QUADS);
-	glVertex3f(-1.20f, -0.20f, 0.0f);
-	glVertex3f(-1.00f, -0.20f, 0.0f);
-	glVertex3f(-1.00f, 0.30f, 0.0f);
-	glVertex3f(-1.20f, 0.30f, 0.0f);
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(-1.15f, -0.70f, 0.0f);
+	glVertex3f(-1.1f, -0.65f, 0.0f);
+	glVertex3f(-1.4f, -0.2f, 0.0f);
+	glVertex3f(-1.45f, -0.25f, 0.0f);
 	glEnd();
 
-	glColor3f(0.0, 1.0, 0.0); //choosing green color
-	glBegin(GL_TRIANGLES);
-	glVertex3f(-0.30f, -0.50f, 0.0f);
-	glVertex3f(-0.70f, -0.50f, 0.0f);
-	glVertex3f(-0.60f, -0.20f, 0.0f);
-	glEnd();
-
-	glColor3f(1.0, 0.5, 0.0); //choosing orange color
-	glBegin(GL_TRIANGLES);
-	glVertex3f(1.20f, 0.20f, 0.0f);
-	glVertex3f(1.00f, 0.20f, 0.0f);
-	glVertex3f(1.10f, 0.30f, 0.0f);
-	glEnd();
-
-	glColor3f(1.0, 0.5, 0.0); //choosing orange color
 	glBegin(GL_QUADS);
-	glVertex3f(1.20f, 0.20f, 0.0f);
-	glVertex3f(1.00f, 0.20f, 0.0f);
-	glVertex3f(1.05f, 0.08f, 0.0f);
-	glVertex3f(1.15f, 0.08f, 0.0f);
-
-
-	// end of drawing
-	glEnd();*/
-
-	glBegin(GL_QUADS);
+	glColor3f(1, 0.2, 0.2);
+	glVertex3f(-1.10f, -0.55f, 0.0f);
+	glVertex3f(-1.05f, -0.5f, 0.0f);
+	glVertex3f(-1.25f, -0.2f, 0.0f);
+	glVertex3f(-1.3f, -0.25f, 0.0f);
+	glEnd();
+}
+void LF3() {
+	glBegin(GL_QUADS); //prva linija prednja lijeva strana
 	glColor3f(1.0, 0.0, 0.0);
 	glVertex3f(-1.05f, -0.40f, 0.0f);
 	glVertex3f(-1.00f, -0.35f, 0.0f);
@@ -208,8 +197,200 @@ void display() {
 	glVertex3f(-1.4f, -0.2f, 0.0f);
 	glVertex3f(-1.45f, -0.25f, 0.0f);
 	glEnd();
+}
+
+void RF1() {
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(-1.15f, 0.70f, 0.0f);
+	glVertex3f(-1.1f, 0.65f, 0.0f);
+	glVertex3f(-1.4f, 0.2f, 0.0f);
+	glVertex3f(-1.45f, 0.25f, 0.0f);
+	glEnd();
+}
+void RF2() {
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(-1.15f, 0.70f, 0.0f); //1
+	glVertex3f(-1.1f, 0.65f, 0.0f); //2 
+	glVertex3f(-1.4f, 0.2f, 0.0f); //3
+	glVertex3f(-1.45f, 0.25f, 0.0f); //4
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glColor3f(1, 0.2, 0.2);
+	glVertex3f(-1.10f, 0.55f, 0.0f);
+	glVertex3f(-1.05f, 0.5f, 0.0f);
+	glVertex3f(-1.25f, 0.2f, 0.0f);
+	glVertex3f(-1.3f, 0.25f, 0.0f);
+	glEnd();
+}
+void RF3() {
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(-1.15f, 0.70f, 0.0f); //1
+	glVertex3f(-1.1f, 0.65f, 0.0f); //2 
+	glVertex3f(-1.4f, 0.2f, 0.0f); //3
+	glVertex3f(-1.45f, 0.25f, 0.0f); //4
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glColor3f(1, 0.2, 0.2);
+	glVertex3f(-1.10f, 0.55f, 0.0f);
+	glVertex3f(-1.05f, 0.5f, 0.0f);
+	glVertex3f(-1.25f, 0.2f, 0.0f);
+	glVertex3f(-1.3f, 0.25f, 0.0f);
+	glEnd();
+
+	glBegin(GL_QUADS); //prva linija prednja lijeva strana 
+	glColor3f(1.0, 0.0, 0.0);
+	glVertex3f(-1.05f, 0.40f, 0.0f);
+	glVertex3f(-1.00f, 0.35f, 0.0f);
+	glVertex3f(-1.10f, 0.2f, 0.0f);
+	glVertex3f(-1.15f, 0.25f, 0.0f);
+	glEnd();
+}
+
+void RB1() {
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(1.15f, 0.70f, 0.0f); //1
+	glVertex3f(1.1f, 0.65f, 0.0f); //2 
+	glVertex3f(1.4f, 0.2f, 0.0f); //3
+	glVertex3f(1.45f, 0.25f, 0.0f); //4
+	glEnd();
+}
+void RB2() {
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(1.15f, 0.70f, 0.0f); //1
+	glVertex3f(1.1f, 0.65f, 0.0f); //2 
+	glVertex3f(1.4f, 0.2f, 0.0f); //3
+	glVertex3f(1.45f, 0.25f, 0.0f); //4
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glColor3f(1, 0.2, 0.2);
+	glVertex3f(1.10f, 0.55f, 0.0f);
+	glVertex3f(1.05f, 0.5f, 0.0f);
+	glVertex3f(1.25f, 0.2f, 0.0f);
+	glVertex3f(1.3f, 0.25f, 0.0f);
+	glEnd();
+}
+void RB3() {
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(1.15f, 0.70f, 0.0f); //1
+	glVertex3f(1.1f, 0.65f, 0.0f); //2 
+	glVertex3f(1.4f, 0.2f, 0.0f); //3
+	glVertex3f(1.45f, 0.25f, 0.0f); //4
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glColor3f(1, 0.2, 0.2);
+	glVertex3f(1.10f, 0.55f, 0.0f);
+	glVertex3f(1.05f, 0.5f, 0.0f);
+	glVertex3f(1.25f, 0.2f, 0.0f);
+	glVertex3f(1.3f, 0.25f, 0.0f);
+	glEnd();
+
+	glBegin(GL_QUADS); //prva linija prednja lijeva strana 
+	glColor3f(1.0, 0.0, 0.0);
+	glVertex3f(1.05f, 0.40f, 0.0f);
+	glVertex3f(1.00f, 0.35f, 0.0f);
+	glVertex3f(1.10f, 0.2f, 0.0f);
+	glVertex3f(1.15f, 0.25f, 0.0f);
+	glEnd();
+}
+
+void LB1() {
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(1.15f, -0.70f, 0.0f);
+	glVertex3f(1.1f, -0.65f, 0.0f);
+	glVertex3f(1.4f, -0.2f, 0.0f);
+	glVertex3f(1.45f, -0.25f, 0.0f);
+	glEnd();
+}
+void LB2() {
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(1.15f, -0.70f, 0.0f); //1
+	glVertex3f(1.1f, -0.65f, 0.0f); //2 
+	glVertex3f(1.4f, -0.2f, 0.0f); //3
+	glVertex3f(1.45f, -0.25f, 0.0f); //4
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glColor3f(1, 0.2, 0.2);
+	glVertex3f(1.10f, -0.55f, 0.0f);
+	glVertex3f(1.05f, -0.5f, 0.0f);
+	glVertex3f(1.25f, -0.2f, 0.0f);
+	glVertex3f(1.3f, -0.25f, 0.0f);
+	glEnd();
+}
+void LB3() {
+
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 0.5, 0.5);
+	glVertex3f(1.15f, -0.70f, 0.0f); //1
+	glVertex3f(1.1f, -0.65f, 0.0f); //2 
+	glVertex3f(1.4f, -0.2f, 0.0f); //3
+	glVertex3f(1.45f, -0.25f, 0.0f); //4
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glColor3f(1, 0.2, 0.2);
+	glVertex3f(1.10f, -0.55f, 0.0f);
+	glVertex3f(1.05f, -0.5f, 0.0f);
+	glVertex3f(1.25f, -0.2f, 0.0f);
+	glVertex3f(1.3f, -0.25f, 0.0f);
+	glEnd();
+
+	glBegin(GL_QUADS); //prva linija prednja lijeva strana 
+	glColor3f(1.0, 0.0, 0.0);
+	glVertex3f(1.05f, -0.40f, 0.0f);
+	glVertex3f(1.00f, -0.35f, 0.0f);
+	glVertex3f(1.10f, -0.2f, 0.0f);
+	glVertex3f(1.15f, -0.25f, 0.0f);
+	glEnd();
+}
+
+
+void display() {
+	cerr << "display callback" << endl;
+	// clean color buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// start drawing quads
+	glBegin(GL_QUADS);
+	// choose color (white)
+	glColor3f(1, 1, 1);
+	// coordinates of initial white rectangle for the background
+	glTexCoord2f(0, 1); glVertex3f(-2, -1, 0);
+	glTexCoord2f(1, 1); glVertex3f(2, -1, 0);
+	glTexCoord2f(1, 0); glVertex3f(2, 1, 0);
+	glTexCoord2f(0, 0); glVertex3f(-2, 1, 0);
+	glEnd();
 
 	// swap buffers to show new graphics
+	//glutSwapBuffers();
+
+	if (polje[0] == 1) LF1();
+	if (polje[0] == 2) LF2();
+	if (polje[0] == 3) LF3();
+
+	if (polje[1] == 1) RF1();
+	if (polje[1] == 2) RF2();
+	if (polje[1] == 3) RF3();
+
+	if (polje[2] == 1) RB1();
+	if (polje[2] == 2) RB2();
+	if (polje[2] == 3) RB3();
+
+	if (polje[3] == 1) LB1();
+	if (polje[3] == 2) LB2();
+	if (polje[3] == 3) LB3();
+
 	glutSwapBuffers();
 }
 
@@ -231,174 +412,185 @@ void reshape(int width, int height)
 
 void idle()
 {
-	// here comes the code which will be executed when program state is idle
+	if (gear == 1) {
+		if (lsf == rsf) {
+			if (lsf == 1) {
+				PlaySound("both.wav", NULL, SND_ASYNC);
+				Sleep(1000);
+			}
+			if (lsf == 2) {
+				PlaySound("both.wav", NULL, SND_ASYNC);
+				Sleep(700);
+			}
+			if (lsf == 3) {
+				PlaySound("both.wav", NULL, SND_ASYNC);
+				Sleep(300);
+			}
+		}
 
-}
+		else if ((lsf > rsf)) {
+			if (lsf == 1) {
+				PlaySound("left.wav", NULL, SND_ASYNC);
+				Sleep(1000);
+			}
+			if (lsf == 2) {
+				PlaySound("left.wav", NULL, SND_ASYNC);
+				Sleep(700);
+			}
+			if (lsf == 3) {
+				PlaySound("left.wav", NULL, SND_ASYNC);
+				Sleep(300);
+			}
+		}
 
-void e_button(unsigned char key, int x, int y) {
-	switch (key) {
-	case 'q': //sljedeci dio kola izvrsava se kada je pritisnuta tipka 'q'
-		x = 1;
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glBegin(GL_QUADS);
-		glColor3f(1, 1, 1);
-		glTexCoord2f(0, 1);
-		glVertex3f(-2, -1, 0);
-		glTexCoord2f(1, 1);
-		glVertex3f(2, -1, 0);
-		glTexCoord2f(1, 0);
-		glVertex3f(2, 1, 0);
-		glTexCoord2f(0, 0);
-		glVertex3f(-2, 1, 0);
-		glEnd();
-		
-		glBegin(GL_QUADS);
-		glColor3f(1.0, 0.5, 0.5);
-		glVertex3f(-1.15f, -0.70f, 0.0f);
-		glVertex3f(-1.1f, -0.65f, 0.0f);
-		glVertex3f(-1.4f, -0.2f, 0.0f);
-		glVertex3f(-1.45f, -0.25f, 0.0f);
-		glEnd();
-
-		PlaySound("C://Users/Tihomir/Desktop/ParkingSensorsWindows/AppleChargingSound.mp3", NULL, SND_ASYNC);
-
-		glutSwapBuffers();
-		break;
-
-	case 'w': //sljedeci dio kola izvrsava se kada je pritisnuta tipka 'w'
-		x = 1;
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glBegin(GL_QUADS);
-		glColor3f(1, 1, 1);
-		glTexCoord2f(0, 1);
-		glVertex3f(-2, -1, 0);
-		glTexCoord2f(1, 1);
-		glVertex3f(2, -1, 0);
-		glTexCoord2f(1, 0);
-		glVertex3f(2, 1, 0);
-		glTexCoord2f(0, 0);
-		glVertex3f(-2, 1, 0);
-		glEnd();
-
-		glBegin(GL_QUADS);
-		glColor3f(1, 0.2, 0.2);
-		glVertex3f(-1.10f, -0.55f, 0.0f);
-		glVertex3f(-1.05f, -0.5f, 0.0f);
-		glVertex3f(-1.25f, -0.2f, 0.0f);
-		glVertex3f(-1.3f, -0.25f, 0.0f);
-		glEnd();
-
-		glBegin(GL_QUADS);
-		glColor3f(1.0, 0.5, 0.5);
-		glVertex3f(-1.15f, -0.70f, 0.0f);
-		glVertex3f(-1.1f, -0.65f, 0.0f);
-		glVertex3f(-1.4f, -0.2f, 0.0f);
-		glVertex3f(-1.45f, -0.25f, 0.0f);
-		glEnd();
-
-		PlaySound("C://Users/Tihomir/Desktop/ParkingSensorsWindows/AppleChargingSound.mp3", NULL, SND_ASYNC);
-
-		glutSwapBuffers();
-		break;
-	case 'e': //sljedeci dio kola izvrsava se kada je pritisnuta tipka 'e'
-		x = 1;
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glBegin(GL_QUADS);
-		glColor3f(1, 1, 1);
-		glTexCoord2f(0, 1);
-		glVertex3f(-2, -1, 0);
-		glTexCoord2f(1, 1);
-		glVertex3f(2, -1, 0);
-		glTexCoord2f(1, 0);
-		glVertex3f(2, 1, 0);
-		glTexCoord2f(0, 0);
-		glVertex3f(-2, 1, 0);
-		glEnd();
-
-		glBegin(GL_QUADS);
-		glColor3f(1.0, 0.0, 0.0);
-		glVertex3f(-1.05f, -0.40f, 0.0f);
-		glVertex3f(-1.00f, -0.35f, 0.0f);
-		glVertex3f(-1.10f, -0.2f, 0.0f);
-		glVertex3f(-1.15f, -0.25f, 0.0f);
-		glEnd();
-
-		glBegin(GL_QUADS);
-		glColor3f(1, 0.2, 0.2);
-		glVertex3f(-1.10f, -0.55f, 0.0f);
-		glVertex3f(-1.05f, -0.5f, 0.0f);
-		glVertex3f(-1.25f, -0.2f, 0.0f);
-		glVertex3f(-1.3f, -0.25f, 0.0f);
-		glEnd();
-
-		glBegin(GL_QUADS);
-		glColor3f(1.0, 0.5, 0.5);
-		glVertex3f(-1.15f, -0.70f, 0.0f);
-		glVertex3f(-1.1f, -0.65f, 0.0f);
-		glVertex3f(-1.4f, -0.2f, 0.0f);
-		glVertex3f(-1.45f, -0.25f, 0.0f);
-		glEnd();
-
-		PlaySound("C://Users/Tihomir/Desktop/ParkingSensorsWindows/AppleChargingSound.mp3", NULL, SND_ASYNC);
-
-		glutSwapBuffers();
-		break;
-
-	case 'r': //sljedeci dio kola izvrsava se kada je pritisnuta tipka 'r'
-		x = 1;
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glBegin(GL_QUADS);
-		glColor3f(1, 1, 1);
-		glTexCoord2f(0, 1);
-		glVertex3f(-2, -1, 0);
-		glTexCoord2f(1, 1);
-		glVertex3f(2, -1, 0);
-		glTexCoord2f(1, 0);
-		glVertex3f(2, 1, 0);
-		glTexCoord2f(0, 0);
-		glVertex3f(-2, 1, 0);
-		glEnd();
-
-		glBegin(GL_QUADS);
-		glColor3f(1.0, 1.0, 1.0);
-		glVertex3f(-1.05f, -0.40f, 0.0f);
-		glVertex3f(-1.00f, -0.35f, 0.0f);
-		glVertex3f(-1.10f, -0.2f, 0.0f);
-		glVertex3f(-1.15f, -0.25f, 0.0f);
-		glEnd();
-
-		glBegin(GL_QUADS);
-		glColor3f(1.0, 1.0, 1.0);
-		glVertex3f(-1.10f, -0.55f, 0.0f);
-		glVertex3f(-1.05f, -0.5f, 0.0f);
-		glVertex3f(-1.25f, -0.2f, 0.0f);
-		glVertex3f(-1.3f, -0.25f, 0.0f);
-		glEnd();
-
-		glBegin(GL_QUADS);
-		glColor3f(1.0, 1.0, 1.0);
-		glVertex3f(-1.15f, -0.70f, 0.0f);
-		glVertex3f(-1.1f, -0.65f, 0.0f);
-		glVertex3f(-1.4f, -0.2f, 0.0f);
-		glVertex3f(-1.45f, -0.25f, 0.0f);
-		glEnd();
-
-		glutSwapBuffers();
-		break;
+		else if ((lsf < rsf)) {
+			if (rsf == 1) {
+				PlaySound("right.wav", NULL, SND_ASYNC);
+				Sleep(1000);
+			}
+			if (rsf == 2) {
+				PlaySound("right.wav", NULL, SND_ASYNC);
+				Sleep(700);
+			}
+			if (rsf == 3) {
+				PlaySound("right.wav", NULL, SND_ASYNC);
+				Sleep(300);
+			}
+		}
+	}
+	else {
+		if (lsr == rsr) {
+			if (lsr == 1) {
+				PlaySound("both_reverse.wav", NULL, SND_ASYNC);
+				Sleep(1000);
+			}
+			if (lsr == 2) {
+				PlaySound("both_reverse.wav", NULL, SND_ASYNC);
+				Sleep(700);
+			}
+			if (lsr == 3) {
+				PlaySound("both_reverse.wav", NULL, SND_ASYNC);
+				Sleep(300);
+			}
+		}
+		else if ((lsr > rsr)) {
+			if (lsr == 1) {
+				PlaySound("left_reverse.wav", NULL, SND_ASYNC);
+				Sleep(1000);
+			}
+			if (lsr == 2) {
+				PlaySound("left_reverse.wav", NULL, SND_ASYNC);
+				Sleep(700);
+			}
+			if (lsr == 3) {
+				PlaySound("left_reverse.wav", NULL, SND_ASYNC);
+				Sleep(300);
+			}
+		}
+		else if ((lsr < rsr)) {
+			if (rsr == 1) {
+				PlaySound("right_reverse.wav", NULL, SND_ASYNC);
+				Sleep(1000);
+			}
+			if (rsr == 2) {
+				PlaySound("right_reverse.wav", NULL, SND_ASYNC);
+				Sleep(700);
+			}
+			if (rsr == 3) {
+				PlaySound("right_reverse.wav", NULL, SND_ASYNC);
+				Sleep(300);
+			}
+		}
 	}
 }
 
-void delay(int milliseconds)
-{
-	long pause;
-	clock_t now, then;
 
-	pause = milliseconds * (CLOCKS_PER_SEC / 1000);
-	now = then = clock();
-	while ((now - then) < pause)
-		now = clock();
+void display_sensors_new(unsigned char key, int x, int y) {
+
+	switch (key) {
+	case '8':
+		gear = 1;
+		break;
+	case '2':
+		gear = 0;
+		break;
+	}
+
+	switch (key) {
+	case 'y':
+		lsf = 1;
+		polje[0] = 1;
+		display();
+		break;
+	case 'x':
+		lsf = 2;
+		polje[0] = 2;
+		display();
+		break;
+	case 'c':
+		lsf = 3;
+		polje[0] = 3;
+		display();
+		break;
+
+	case 'q':
+		rsf = 1;
+		polje[1] = 1;
+		display();
+		break;
+	case 'w':
+		rsf = 2;
+		polje[1] = 2;
+		display();
+		break;
+	case 'e':
+		rsf = 3;
+		polje[1] = 3;
+		display();
+		break;
+
+	case 't':
+		rsr = 1;
+		polje[2] = 1;
+		display();
+		break;
+	case 'z':
+		rsr = 2;
+		polje[2] = 2;
+		display();
+		break;
+	case 'u':
+		rsr = 3;
+		polje[2] = 3;
+		display();
+		break;
+
+	case 'v':
+		lsr = 1;
+		polje[3] = 1;
+		display();
+		break;
+	case 'b':
+		lsr = 2;
+		polje[3] = 2;
+		display();
+		break;
+	case 'n':
+		lsr = 3;
+		polje[3] = 3;
+		display();
+		break;
+
+	case 'r':
+		for (int i = 0; i < 4; i++)
+		{
+			polje[i] = 0;
+		}
+		lsf = rsf = lsr = rsr = 0;
+		display();
+		break;
+
+	default:
+		break;
+	}
 }
-
-
-
-
